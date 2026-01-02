@@ -638,6 +638,34 @@ Performance metrics from RMRFD cross-dataset validation with Gabor filters:
 
 ---
 
+#### **ROC Curves - Proposed Dataset**
+
+ROC (Receiver Operating Characteristic) curves showing classifier performance with Gabor filters:
+
+<div align="center">
+
+| Unmasked | Masked | Both |
+|----------|--------|------|
+| ![ROC Unmasked](ROC_curves/roc_unmasked.png) | ![ROC Masked](ROC_curves/roc_masked.png) | ![ROC Both](ROC_curves/roc_both.png) |
+
+</div>
+
+---
+
+#### **ROC Curves - RMRFD Dataset**
+
+ROC curves for cross-dataset validation on real-world masked faces:
+
+<div align="center">
+
+| Unmasked | Masked | Both |
+|----------|--------|------|
+| ![ROC Unmasked](rmrdROC/unmasked.png) | ![ROC Masked](rmrdROC/masked.png) | ![ROC Both](rmrdROC/both.png) |
+
+</div>
+
+---
+
 ### 🎯 Key Performance Insights
 
 #### **Best Performers - MobileNetV2 + Gabor Filters**
@@ -856,39 +884,40 @@ pipeline = FaceRecognitionPipeline(similarity_threshold=0.65)  # More strict
 
 ## 🔬 Research & Implementation Details
 
-### Feature Extraction: Local Binary Pattern (LBP)
+### Feature Extraction: Gabor Filters
 
-**Why LBP for This Project:**
+**Why Gabor Filters for This Project:**
 
-LBP has been selected as the feature extraction method for MobileNetV2 + LBP pipeline due to its excellent performance and efficiency.
+Gabor Filters have been selected as the primary feature extraction method for MobileNetV2 + Gabor pipelines due to their excellent texture analysis capabilities and frequency domain representation.
 
 **Advantages:**
-- ✅ Fast computation (real-time capable)
-- ✅ Robust to illumination changes
-- ✅ Requires minimal training data
-- ✅ Excellent for masked faces (captures edge information)
-- ✅ Consistent with deep learning features
-- ✅ Achieves 96-97% accuracy
-- ✅ Processing speed: 50-90ms per face
+- ✅ Rich texture feature extraction
+- ✅ Robust to illumination and scale changes
+- ✅ Multi-frequency and multi-orientation analysis
+- ✅ Biologically inspired (similar to mammalian visual cortex)
+- ✅ Excellent for detailed texture comparison
+- ✅ Consistent with deep learning embeddings
+- ✅ Achieves 75-81% accuracy with rich feature representation
 
 **Mathematical Foundation:**
 ```
-LBP_P,R = Σ s(g_i - g_c) * 2^i
+G(x, y; λ, θ, ψ, γ, σ) = exp(-(x'²/σ_x² + y'²/σ_y²)/2) * cos(2π x'/λ + ψ)
 
 Where:
-- P = number of neighbors (8)
-- R = radius (1)
-- s(x) = sign function
-- g_i = neighbor gray value
-- g_c = center gray value
+- λ = wavelength of sinusoid
+- θ = orientation
+- ψ = phase offset
+- γ = aspect ratio
+- σ = standard deviation of Gaussian envelope
+- x', y' = rotated coordinates
 ```
 
 **Implementation Details:**
-- 8 neighbors, radius 1 (standard configuration)
-- Uniform patterns (59-dimensional feature vector)
-- Spatial subdivision using 3×3 blocks
-- Feature concatenation with deep embeddings
-- Robust histogram-based representation
+- 8 orientations (0°, 22.5°, 45°, 67.5°, 90°, 112.5°, 135°, 157.5°)
+- 2 scales (frequency bands)
+- 16-dimensional feature vector per image region
+- Filter responses captured across spatial locations
+- Robust multi-scale texture representation
 
 ---
 
@@ -938,12 +967,12 @@ else:
 4. **Data Augmentation**
    - Rotation: ±10°
    - Brightness: ±10%
-   - Zoom: ±10%
+   - Zoom: ±10°
 
 ### Training Configuration
 
 ```python
-# Standard training hyperparameters
+# Standard training hyperparameters for Gabor pipelines
 optimizer = Adam(learning_rate=0.01)
 loss = CategoricalCrossentropy()
 metrics = ['accuracy']
