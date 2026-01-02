@@ -631,7 +631,8 @@ Performance metrics from RMRFD cross-dataset validation with Gabor filters:
 
 | Unmasked | Masked | Both |
 |----------|--------|------|
-| ![Unmasked](Accuracy\ and\ Loss\ for\ RMRFD\ dataset/mobilenet_gabor_unmasked_performance.png) | ![Masked](Accuracy\ and\ Loss\ for\ RMRFD\ dataset/mobilenet_gabor_masked_performance.png) | ![Both](Accuracy\ and\ Loss\ for\ RMRFD\ dataset/mobilenet_gabor_both_performance.png) |
+| ![Unmasked](Accuracy%20and%20Loss%20for%20RMRFD%20dataset/mobilenet_gabor_unmasked_performance.png) | ![Masked](Accuracy%20and%20Loss%20for%20RMRFD%20dataset/mobilenet_gabor_masked_performance.png) | ![Both](Accuracy%20and%20Loss%20for%20RMRFD%20dataset/mobilenet_gabor_both_performance.png) |
+
 
 </div>
 
