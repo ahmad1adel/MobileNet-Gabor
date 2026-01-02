@@ -1138,7 +1138,7 @@ This project is licensed under the **MIT License** - see the LICENSE file for de
 
 **Ahmed Adel**
 - GitHub: [@ahmad1adel](https://github.com/ahmad1adel)
-- Email: your.email@example.com
+- Email: ahmed.adel.tageldeen@hotmail.com
 
 ---
 
