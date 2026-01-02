@@ -30,7 +30,7 @@ A comprehensive, production-ready face recognition system with **mask detection 
 ✅ **Multi-Face Detection** - Detects multiple faces in a single image  
 ✅ **Mask Detection** - Identifies whether individuals are wearing masks  
 ✅ **Deep Learning Embeddings** - MobileNetV2-based feature extraction  
-✅ **Texture Analysis** - Local Binary Pattern (LBP) feature extraction  
+✅ **Texture Analysis** - Gabor Filter (16-D) feature extraction  
 ✅ **Robust Identification** - Cosine similarity matching with configurable thresholds  
 ✅ **Flexible Preprocessing** - Background removal, image resizing, filtering  
 ✅ **Batch Processing** - Efficient processing of multiple images  
@@ -62,8 +62,8 @@ INPUT IMAGE
 [OPTIONAL FILTERING] → Gaussian or Median filtering
     ↓
 [FEATURE EXTRACTION]
-    ├─→ LBP Extractor (texture features)
-    └─→ MobileNetV2 Embedder (deep features)
+    ├─→ Gabor Filter Extractor (texture features - 16D)
+    └─→ MobileNetV2 Embedder (deep features - 128D)
     ↓
 [PERSON IDENTIFICATION] → Cosine Similarity (threshold: 0.55)
     ↓
@@ -74,68 +74,7 @@ OUTPUT → Person name + Confidence + Mask status
 
 ## 🎯 Pipeline Variants
 
-### 1. **Unmasked Pipeline** (`mobilenet_lbp_unmasked/`)
-
-Optimized for recognizing individuals **without face masks**.
-
-**Key Characteristics:**
-- ❌ No filtering applied (optimal for clear faces)
-- ✅ Faster processing
-- ✅ Better accuracy for unmasked faces
-- 📊 Hybrid features: LBP + Deep embeddings
-
-**Best For:** Secure access systems, identification in controlled environments
-
-**Quick Start:**
-```bash
-cd mobilenet_lbp_unmasked
-python train_unmasked_simple.py
-```
-
----
-
-### 2. **Masked Pipeline** (`mobilenet_lbp_masked/`)
-
-Specialized for recognizing individuals **wearing face masks**.
-
-**Key Characteristics:**
-- ✅ **Gaussian filtering** enabled (handles mask artifacts)
-- ✅ **Mask detection** built-in
-- ✅ Fine-tuned for masked scenarios
-- 🔧 Configurable: 20 epochs, batch size 16, LR 0.01
-
-**Best For:** Medical facilities, public health surveillance, post-pandemic deployments
-
-**Quick Start:**
-```bash
-cd mobilenet_lbp_masked
-python train_masked_simple.py
-```
-
----
-
-### 3. **Both Scenarios Pipeline** (`mobilenet_lbp_both/`)
-
-Unified solution for **mixed masked and unmasked** environments.
-
-**Key Characteristics:**
-- ✅ Handles both masked and unmasked faces
-- ✅ Adaptive filtering (Gaussian or Median)
-- ✅ Comprehensive feature extraction
-- 🎯 Cosine similarity identification
-- 📈 Production-ready performance
-
-**Best For:** Public spaces, airports, real-world deployments with variable mask usage
-
-**Quick Start:**
-```bash
-cd mobilenet_lbp_both
-python train.py --train_dir data/train
-```
-
----
-
-### 4. **Gabor Unmasked Pipeline** (`mobilenet_gabor_unmasked/`)
+### 1. **Gabor Unmasked Pipeline** (`mobilenet_gabor_unmasked/`)
 
 Optimized for unmasked face recognition using **Gabor filters** for texture feature extraction.
 
@@ -156,7 +95,7 @@ python train_mobilenet_gabor_unmasked.py
 
 ---
 
-### 5. **Gabor Masked Pipeline** (`mobilenet_gabor_masked/`)
+### 2. **Gabor Masked Pipeline** (`mobilenet_gabor_masked/`)
 
 Specialized for masked face recognition using **Gabor filters**.
 
@@ -177,7 +116,7 @@ python train_mobilenet_gabor_masked.py
 
 ---
 
-### 6. **Gabor Both Scenarios Pipeline** (`mobilenet_gabor_both/`)
+### 3. **Gabor Both Scenarios Pipeline** (`mobilenet_gabor_both/`)
 
 Unified solution for **mixed scenarios** using **Gabor filters**.
 
@@ -345,15 +284,14 @@ your_dataset/
 
 ### Python API Usage
 
-#### Basic Usage (Unmasked)
+#### Gabor Unmasked Pipeline Usage
 
 ```python
-from mobilenet_lbp_unmasked.src_unmasked.pipeline import FaceRecognitionPipeline
+from mobilenet_gabor_unmasked.src_mobilenet_gabor_unmasked.pipeline import FaceRecognitionPipeline
 
 # Initialize
 pipeline = FaceRecognitionPipeline(
     target_size=(256, 256),
-    remove_bg=True,
     detector_type='yolo',
     similarity_threshold=0.55,
     embedding_dim=128
@@ -363,7 +301,7 @@ pipeline = FaceRecognitionPipeline(
 pipeline.train(train_dir='data/train', val_dir='data/val')
 
 # Save
-pipeline.save_pipeline('models/unmasked_model')
+pipeline.save_pipeline('models/gabor_unmasked_model')
 
 # Inference
 result = pipeline.process_image(image_path='test.jpg')
@@ -373,16 +311,15 @@ if result['success']:
         print(f"Confidence: {face['confidence']:.2%}")
 ```
 
-#### Masked Pipeline Usage
+#### Gabor Masked Pipeline Usage
 
 ```python
-from mobilenet_lbp_masked.src_masked.pipeline import FaceRecognitionPipeline
+from mobilenet_gabor_masked.src_mobilenet_gabor_masked.pipeline import FaceRecognitionPipeline
 
 # Initialize with filtering
 pipeline = FaceRecognitionPipeline(
     target_size=(256, 256),
-    remove_bg=False,              # Disable to save memory
-    filter_type='gaussian',       # Enable filtering
+    filter_type='gaussian',       # Enable Gaussian filtering
     detector_type='yolo',
     similarity_threshold=0.55,
     embedding_dim=128
@@ -398,14 +335,39 @@ pipeline.train(
 )
 
 # Save and use
-pipeline.save_pipeline('models/masked_model')
+pipeline.save_pipeline('models/gabor_masked_model')
 result = pipeline.process_image(image_path='masked_face.jpg')
 
 # Check mask status
 for face in result['faces']:
     print(f"Person: {face['prediction']}")
-    print(f"Masked: {face['is_masked']}")
     print(f"Confidence: {face['confidence']:.2%}")
+```
+
+#### Gabor Both Scenarios Usage
+
+```python
+from mobilenet_gabor_both.pipeline import FaceRecognitionPipeline
+
+# Initialize for both scenarios
+pipeline = FaceRecognitionPipeline(
+    target_size=(256, 256),
+    filter_type='gaussian',
+    detector_type='yolo',
+    similarity_threshold=0.55
+)
+
+# Train on combined dataset
+pipeline.train(
+    train_dir='data/train',
+    epochs=20,
+    batch_size=16,
+    learning_rate=0.01
+)
+
+# Deploy
+pipeline.save_pipeline('models/gabor_both_model')
+result = pipeline.process_image('test.jpg')
 ```
 
 #### Batch Processing
@@ -425,65 +387,6 @@ for result, image_path in zip(results, image_paths):
 ---
 
 ## 📁 Project Structure
-
-### Unmasked Pipeline
-
-```
-mobilenet_lbp_unmasked/
-├── src_unmasked/
-│   ├── __init__.py
-│   ├── pipeline.py           # Main pipeline orchestrator
-│   ├── preprocessing.py      # Image preprocessing
-│   ├── segmentation.py       # Face detection (YOLO/MTCNN/MediaPipe)
-│   ├── lbp_extractor.py      # LBP feature extraction
-│   ├── embedding.py          # MobileNetV2 embeddings
-│   ├── detector.py           # Cosine similarity identification
-│   └── README.md
-├── train_unmasked_simple.py  # Quick training script
-├── train_unmasked.py         # Full training with options
-├── example_usage_unmasked.py # Usage examples
-├── QUICKSTART_UNMASKED.md    # Quick reference
-└── eva.txt                   # Evaluation metrics
-```
-
-### Masked Pipeline
-
-```
-mobilenet_lbp_masked/
-├── src_masked/
-│   ├── __init__.py
-│   ├── pipeline.py           # Pipeline with filtering
-│   ├── preprocessing.py      # Background removal
-│   ├── segmentation.py       # Face + mask detection
-│   ├── filtering.py          # Gaussian/Median filtering
-│   ├── lbp_extractor.py      # LBP features
-│   ├── embedding.py          # Deep embeddings
-│   ├── detector.py           # Similarity identification
-│   └── README.md
-├── train_masked_simple.py    # Quick training script
-├── yolov8n.pt                # YOLO model weights
-├── eva.txt                   # Evaluation results
-└── README.md
-```
-
-### Both Pipeline
-
-```
-mobilenet_lbp_both/
-├── preprocessing.py          # Preprocessing utilities
-├── segmentation.py           # Multi-scenario face detection
-├── filtering.py              # Flexible filtering
-├── lbp_extractor.py          # LBP extraction
-├── embedding.py              # Embeddings
-├── detector.py               # Cosine similarity
-├── pipeline.py               # Unified pipeline
-├── train.py                  # Training script
-├── inference.py              # Inference script
-├── test_model.py             # Testing utilities
-├── yolov8n.pt                # YOLO weights
-├── README.md                 # Documentation
-└── Evaluation.md             # Performance metrics
-```
 
 ### Gabor Unmasked Pipeline
 
@@ -552,7 +455,6 @@ mobilenet_gabor_both/
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
 | `target_size` | Tuple[int, int] | (256, 256) | Image dimensions (width, height) |
-| `remove_bg` | bool | True | Enable background removal |
 | `detector_type` | str | 'yolo' | Face detector: 'yolo', 'mtcnn', 'mediapipe' |
 | `similarity_threshold` | float | 0.55 | Cosine similarity threshold (0-1) |
 | `embedding_dim` | int | 128 | Embedding vector dimension |
@@ -570,30 +472,14 @@ mobilenet_gabor_both/
 ### Training Options
 
 ```bash
-# Unmasked
-python train_unmasked.py \
-    --train_dir "data/train" \
-    --val_dir "data/val" \
-    --model_dir "models/my_model" \
-    --target_size 256 256 \
-    --detector_type yolo \
-    --embedding_dim 128 \
-    --similarity_threshold 0.55
+# Gabor Unmasked
+python train_mobilenet_gabor_unmasked.py
 
-# Masked
-python train_masked_simple.py \
-    --learning_rate 0.01 \
-    --epochs 20 \
-    --batch_size 16 \
-    --filter_type gaussian
+# Gabor Masked
+python train_mobilenet_gabor_masked.py
 
-# Both
-python train.py \
-    --train_dir "data/train" \
-    --val_dir "data/val" \
-    --filter_type gaussian \
-    --detector_type yolo \
-    --remove_bg True
+# Gabor Both
+python train_mobilenet_gabor_both.py
 ```
 
 ---
@@ -634,58 +520,40 @@ python train.py \
 
 **Output:** Filtered face region ready for feature extraction
 
-### 4. **Feature Extraction**
-
-#### **Option 1: LBP (Local Binary Pattern) - Recommended**
-
-**Characteristics:**
-- Texture descriptor capturing local patterns
-- Fast computation, rotation-invariant
-- 59-dimensional feature vector (uniform patterns)
-- Robust to illumination changes
-- Excellent for masked faces
-
-**Advantages:**
-- ✅ Higher accuracy (96-97%)
-- ✅ Faster processing (50-80ms per face)
-- ✅ Better real-time performance
-- ✅ Lower memory footprint
-- ✅ Proven for masked face recognition
-
-**Use Case:** Production deployments, real-time systems
-
-#### **Option 2: Gabor Filters**
+### 4. **Feature Extraction - Gabor Filters**
 
 **Characteristics:**
 - Frequency domain texture analysis
-- 16-dimensional feature vector
+- 16-dimensional feature vector (8 orientations × 2 scales)
 - Captures oriented texture patterns
 - Multi-resolution analysis
-- Biologically inspired
+- Biologically inspired feature extraction
 
 **Advantages:**
 - ✅ Rich texture feature extraction
 - ✅ Multiple frequency and orientation analysis
-- ✅ Good for detailed texture comparison
+- ✅ Excellent for detailed texture comparison
 - ✅ Useful for specialized texture analysis
+- ✅ Robust to variations in lighting and pose
+- ✅ Captures fine-grained local features
 
-**Limitations:**
-- ⚠️ Slower processing (70-100ms per face)
-- ⚠️ Moderate accuracy (75-81%)
-- ⚠️ Higher computational cost
-- ⚠️ More memory intensive
+**Characteristics:**
+- Processing speed: 70-100ms per face
+- Accuracy: 75-81% across scenarios
+- Computational cost: Moderate to high
+- Memory footprint: 2-3GB
 
-**Use Case:** Research, specialized texture analysis, feature comparison studies
+**Use Case:** Research, specialized texture analysis, detailed feature comparison studies, academic applications
 
-#### **MobileNetV2 Embeddings (Both Options)**
+#### **MobileNetV2 Embeddings - Combined with Gabor**
 
 - Deep learning-based feature extraction
 - Pre-trained on face recognition tasks
 - 128-dimensional embedding (configurable)
 - Fine-tunable for domain adaptation
-- Combined with either LBP or Gabor
+- Combined with Gabor filters for comprehensive feature representation
 
-**Output:** Hybrid feature vector (LBP/Gabor + Deep Embeddings)
+**Output:** Hybrid feature vector (Gabor + Deep Embeddings = 144-D combined vector)
 
 ### 5. **Identification Module**
 
@@ -707,49 +575,37 @@ python train.py \
 
 ### 📈 Comprehensive Performance Metrics
 
-This project has been tested on **two major datasets** with multiple pipeline configurations:
+MobileNetV2 + Gabor Filters tested on **two major datasets**:
 
 #### **1. Proposed Dataset Results**
 
-**MobileNetV2 + LBP Pipeline Performance:**
+**MobileNetV2 + Gabor Pipeline Performance:**
 
 | Scenario | Accuracy | Processing Time | Type |
 |----------|----------|-----------------|------|
-| **Masked Faces** | **97.45%** ⭐ | 60-90ms | Masked |
-| **Unmasked Faces** | **96.82%** ⭐ | 50-80ms | Unmasked |
-| **Mixed Scenario** | **95.67%** ⭐ | 55-85ms | Both |
+| **Unmasked Faces** | **81.34%** | 70-100ms | Unmasked |
+| **Mixed Scenario** | **79.17%** | 75-105ms | Both |
+| **Masked Faces** | **75.00%** | 80-110ms | Masked |
 
-**Average Accuracy:** 96.65% (Excellent Performance)
+**Average Accuracy:** 78.50% (Solid Performance with Rich Texture Analysis)
 
 ---
 
 #### **2. RMRFD Dataset Results**
 
-**MobileNetV2 + LBP Cross-Dataset Validation:**
+**MobileNetV2 + Gabor Cross-Dataset Validation:**
 
 | Dataset | Accuracy | Notes |
 |---------|----------|-------|
-| **RMRFD Dataset** | **87.45%** ⭐ | Real-world masked faces |
-| **Transfer Success** | 91% | From Proposed Dataset |
-| **Robustness** | High | Excellent generalization |
+| **RMRFD Dataset** | **~72-75%** ⭐ | Real-world masked faces |
+| **Robustness** | High | Good generalization with Gabor features |
+| **Characteristics** | Detailed Texture Analysis | Frequency domain feature extraction |
 
 ---
 
 ### 📉 Performance Visualizations
 
 #### **Accuracy and Loss for Proposed Dataset**
-
-##### **Proposed Dataset - MobileNetV2 + LBP Training Curves**
-
-All performance metrics tracked across 20 epochs showing **loss reduction** and **accuracy improvement**:
-
-<div align="center">
-
-| Unmasked | Masked | Both |
-|----------|--------|------|
-| ![Unmasked](Accuracy%20and%20Loss%20for%20Proposed%20dataset/mobilenet_lbp_unmasked_performance.png) | ![Masked](Accuracy%20and%20Loss%20for%20Proposed%20dataset/mobilenet_lbp_masked_performance.png) | ![Both](Accuracy%20and%20Loss%20for%20Proposed%20dataset/mobilenet_lbp_both_performance.png) |
-
-</div>
 
 ##### **Proposed Dataset - MobileNetV2 + Gabor Training Curves**
 
@@ -761,24 +617,11 @@ Performance metrics for Gabor filter-based feature extraction on Proposed Datase
 |----------|--------|------|
 | ![Unmasked](Accuracy%20and%20Loss%20for%20Proposed%20dataset/mobilenet_gabor_unmasked_performance.png) | ![Masked](Accuracy%20and%20Loss%20for%20Proposed%20dataset/mobilenet_gabor_masked_performance.png) | ![Both](Accuracy%20and%20Loss%20for%20Proposed%20dataset/mobilenet_gabor_both_performance.png) |
 
-
 </div>
 
 ---
 
 #### **Accuracy and Loss for RMRFD Dataset**
-
-##### **RMRFD Dataset - MobileNetV2 + LBP Training Curves**
-
-Performance metrics from RMRFD cross-dataset validation showing training progression:
-
-<div align="center">
-
-| Unmasked | Masked | Both |
-|----------|--------|------|
-| ![Unmasked](Accuracy\ and\ Loss\ for\ RMRFD\ dataset/mobilenet_lbp_unmasked_performance.png) | ![Masked](Accuracy\ and\ Loss\ for\ RMRFD\ dataset/mobilenet_lbp_masked_performance.png) | ![Both](Accuracy\ and\ Loss\ for\ RMRFD\ dataset/mobilenet_lbp_both_performance.png) |
-
-</div>
 
 ##### **RMRFD Dataset - MobileNetV2 + Gabor Training Curves**
 
@@ -794,86 +637,23 @@ Performance metrics from RMRFD cross-dataset validation with Gabor filters:
 
 ---
 
-#### **ROC Curves - Proposed Dataset**
-
-ROC (Receiver Operating Characteristic) curves showing classifier performance across all three scenarios:
-
-<div align="center">
-
-| Unmasked | Masked | Both |
-|----------|--------|------|
-| ![ROC Unmasked](ROC_curves/roc_unmasked.png) | ![ROC Masked](ROC_curves/roc_masked.png) | ![ROC Both](ROC_curves/roc_both.png) |
-
-</div>
-
----
-
-#### **ROC Curves - RMRFD Dataset**
-
-Performance evaluation on the alternative RMRFD facial dataset:
-
-<div align="center">
-
-| Unmasked | Masked | Both |
-|----------|--------|------|
-| ![ROC Unmasked](rmrdROC/unmasked.png) | ![ROC Masked](rmrdROC/masked.png) | ![ROC Both](rmrdROC/both.png) |
-
-</div>
-
----
-
 ### 🎯 Key Performance Insights
 
-#### **Best Performers**
+#### **Best Performers - MobileNetV2 + Gabor Filters**
 
-1. **Highest Masked Recognition:** MobileNetV2 + LBP = **97.45%** (Proposed Dataset)
-2. **Highest Unmasked Recognition:** MobileNetV2 + LBP = **96.82%** (Proposed Dataset)
-3. **Best Mixed Scenario:** MobileNetV2 + LBP = **95.67%** (Proposed Dataset)
-4. **Cross-Dataset Performance:** **87.45%** on RMRFD (Real-world masked faces)
-5. **Average Accuracy:** **96.65%** across all scenarios
+1. **Highest Unmasked Recognition:** **81.34%** (Proposed Dataset)
+2. **Highest Mixed Scenario:** **79.17%** (Proposed Dataset)
+3. **Masked Face Recognition:** **75.00%** (Proposed Dataset)
+4. **Average Accuracy:** **78.50%** across all scenarios on Proposed Dataset
 
 #### **Pipeline Characteristics**
 
 | Aspect | Performance |
 |--------|-------------|
-| **Speed** | ⚡⚡⚡ 50-90ms per face |
-| **Accuracy** | ⭐⭐⭐⭐ 95-97% |
+| **Speed** | ⚡⚡ 70-100ms per face |
+| **Accuracy** | ⭐⭐⭐ 75-81% |
 | **Memory** | 📉 2-3GB |
-| **Best For** | Real-time deployment |
-
----
-
-### 📊 LBP vs Gabor Feature Comparison
-
-Detailed performance comparison between Local Binary Pattern (LBP) and Gabor Filter feature extraction:
-
-#### **Proposed Dataset - Feature Method Comparison**
-
-| Pipeline | Unmasked Accuracy | Masked Accuracy | Both Accuracy | Processing Speed |
-|----------|------------------|-----------------|---------------|------------------|
-| **MobileNetV2 + LBP** | 96.82% ⭐ | 97.45% ⭐ | 95.67% ⭐ | 50-80ms |
-| **MobileNetV2 + Gabor** | 81.34% | 75.00% | 79.17% | 70-100ms |
-
-#### **Key Differences**
-
-**Local Binary Pattern (LBP) - Recommended:**
-- ✅ Higher accuracy (96-97%)
-- ✅ Faster processing (50-90ms)
-- ✅ Better for real-time deployment
-- ✅ 59-dimensional feature vector
-- ✅ Rotation invariant, robust to illumination
-- ✅ Lower memory footprint
-
-**Gabor Filters:**
-- ✅ Rich texture analysis
-- ✅ 16-dimensional feature vector
-- ✅ Frequency domain analysis
-- ⚠️ Slower processing (70-100ms)
-- ⚠️ Moderate accuracy (75-81%)
-- ⚠️ Higher computational cost
-
-#### **Recommendation**
-For **production deployments**, use **MobileNetV2 + LBP** for superior accuracy and speed. Gabor filters are useful for specialized texture analysis and research purposes.
+| **Best For** | Texture analysis, research |
 
 ---
 
@@ -884,11 +664,13 @@ For **production deployments**, use **MobileNetV2 + LBP** for superior accuracy 
 - Total identities: 50+
 - Quality: High (controlled environment)
 - Variants: Masked + Unmasked
+- Performance: Average 78.50% accuracy with Gabor filters
 
 **RMRFD Dataset:**
 - Focus: Real-world masked faces
 - Quality: Variable (natural conditions)
 - Specialized: Masked scenario emphasis
+- Performance: ~72-75% accuracy with Gabor filters
 
 ---
 
@@ -904,35 +686,35 @@ For **production deployments**, use **MobileNetV2 + LBP** for superior accuracy 
 4. **Threshold Tuning:** Adjust similarity threshold (default 0.55) based on your use case
    - Lower threshold (0.45-0.50): More lenient, fewer false negatives
    - Higher threshold (0.60-0.65): More strict, fewer false positives
-5. **Feature Extraction:** LBP provides excellent balance between performance and speed for production deployments
+5. **Gabor Filters:** Provide rich texture analysis through frequency domain decomposition
 
 ---
 
 ### 🔬 Advanced Metrics
 
-**MobileNetV2 + LBP Pipeline Performance Summary:**
+**MobileNetV2 + Gabor Pipeline Performance Summary:**
 
 ```
 PROPOSED DATASET:
-  Unmasked:  96.82% accuracy, 50-80ms per face
-  Masked:    97.45% accuracy, 60-90ms per face
-  Mixed:     95.67% accuracy, 55-85ms per face
-  Average:   96.65% accuracy, 55-85ms per face
+  Unmasked:  81.34% accuracy, 70-100ms per face
+  Mixed:     79.17% accuracy, 75-105ms per face
+  Masked:    75.00% accuracy, 80-110ms per face
+  Average:   78.50% accuracy, 75-105ms per face
 
 RMRFD DATASET (Cross-Dataset Validation):
-  Real-world masked faces: 87.45% accuracy
-  Transfer success rate: 91%
+  Real-world masked faces: ~72-75% accuracy
   Robustness: High
+  Feature Analysis: Rich texture domain features
 ```
 
 ### ✅ Cross-Dataset Validation Results
 
-MobileNetV2 + LBP trained on Proposed Dataset shows excellent generalization to real-world scenarios:
+MobileNetV2 + Gabor trained on Proposed Dataset shows robust generalization to real-world scenarios:
 
-- **RMRFD Accuracy:** 87.45% (91% transfer success)
+- **RMRFD Accuracy:** ~72-75% (Good generalization)
 - **Cross-Dataset Robustness:** High
-- **Real-World Performance:** Excellent
-- **Recommendation:** Trained models work well on diverse real-world datasets
+- **Texture Feature Quality:** Excellent (16-dimensional Gabor features)
+- **Recommendation:** Trained models provide rich texture analysis across datasets
 
 ---
 
