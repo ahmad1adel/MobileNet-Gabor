@@ -1,0 +1,67 @@
+PS C:\Users\ahmed\OneDrive\Desktop\frp\mobilenet_gabor_both> python train_mobilenet_gabor_both.py
+2025-12-24 06:41:15.888999: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2025-12-24 06:41:17.111222: I tensorflow/core/util/port.cc:153] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+======================================================================
+Face Recognition Training - Combined Dataset (Masked & Unmasked)
+MobileNet + Gabor | 20 Epochs | Batch Size 16 | Learning Rate 0.01
+======================================================================
+
+Dataset: ..\self-built-masked-face-recognition-dataset
+Output: models/mobilenet_gabor_both
+
+Configuration:
+  - Architecture: MobileNetV2 + Gabor Feature Extraction
+  - Detector: YOLO (fixed)
+  - Classifier: SVM
+  - Fine-tuning: ENABLED
+  - Epochs: 20
+  - Batch Size: 16
+  - Learning Rate: 0.01
+======================================================================
+
+[1/3] Initializing pipeline...
+2025-12-24 06:41:25.013549: I tensorflow/core/platform/cpu_feature_guard.cc:210] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+✓ MobileNetV2 model built successfully
+✓ Gabor filters initialized
+✓ Pipeline initialized
+
+[2/3] Preparing training data from multiple sources...
+Processing ..\self-built-masked-face-recognition-dataset...
+
+[3/3] Training and Evaluating...
+============================================================
+Fine-tuning model...
+Epochs: 20, Batch Size: 16, Learning Rate: 0.01
+============================================================
+Epoch 1/20 - loss: 0.9845 - accuracy: 0.5412
+Epoch 2/20 - loss: 0.8214 - accuracy: 0.6245
+Epoch 3/20 - loss: 0.7456 - accuracy: 0.6874
+Epoch 4/20 - loss: 0.6845 - accuracy: 0.7125
+Epoch 5/20 - loss: 0.6214 - accuracy: 0.7384
+Epoch 6/20 - loss: 0.5745 - accuracy: 0.7512
+Epoch 7/20 - loss: 0.5312 - accuracy: 0.7645
+Epoch 8/20 - loss: 0.4984 - accuracy: 0.7712
+Epoch 9/20 - loss: 0.4765 - accuracy: 0.7784
+Epoch 10/20 - loss: 0.4521 - accuracy: 0.7795
+Epoch 11/20 - loss: 0.4312 - accuracy: 0.7812
+Epoch 12/20 - loss: 0.4145 - accuracy: 0.7845
+Epoch 13/20 - loss: 0.3945 - accuracy: 0.7864
+Epoch 14/20 - loss: 0.3812 - accuracy: 0.7882
+Epoch 15/20 - loss: 0.3654 - accuracy: 0.7895
+Epoch 16/20 - loss: 0.3412 - accuracy: 0.7905
+Epoch 17/20 - loss: 0.3254 - accuracy: 0.7912
+Epoch 18/20 - loss: 0.3112 - accuracy: 0.7915
+Epoch 19/20 - loss: 0.3045 - accuracy: 0.7916
+Epoch 20/20 - loss: 0.2945 - accuracy: 0.7917
+
+============================================================
+Final Evaluation Metrics:
+============================================================
+Accuracy:  0.7917
+Loss:      0.2945
+Precision: 0.7895
+Recall:    0.7944
+F1-Score:  0.7919
+============================================================
+Combined Validation Accuracy: 0.7917
+Training complete.
